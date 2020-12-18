@@ -14,6 +14,7 @@
 #include <thread>
 #include	<queue>
 //#include "VCameraMessagePrivate.h"
+#pragma comment(lib,"Version.lib")
 
 #define ASIO_STANDALONE
 //#include "asio.hpp"
@@ -39,6 +40,8 @@ class CAboutDlg : public CDialogEx
 {
 public:
 	CAboutDlg();
+	virtual BOOL OnInitDialog();
+	void  GetVersion(CString &ver);
 
 // 对话框数据
 	enum { IDD = IDD_ABOUTBOX };
@@ -63,6 +66,65 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
+BOOL CAboutDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+	CString strVersion;
+	GetVersion(strVersion);
+	CString strVersionInfo;
+	strVersionInfo.Format("版本号:%s", strVersion);
+	GetDlgItem(IDC_STATIC_VERSION)->SetWindowTextA(strVersionInfo);
+	return true;
+}
+void CAboutDlg::GetVersion(CString &ver)
+{
+	DWORD dwInfoSize = 0;
+	TCHAR exePath[MAX_PATH];
+	memset(exePath, 0, sizeof(exePath));
+
+	ver.Format(_T("V1.00"));
+
+	// 得到程序的自身路径
+	GetModuleFileName(NULL, exePath, sizeof(exePath) / sizeof(TCHAR));
+
+	// 判断是否能获取版本号
+	dwInfoSize = GetFileVersionInfoSize(exePath, NULL);
+
+	if (dwInfoSize == 0)
+	{
+		::OutputDebugString("GetFileVersionInfoSize fail\r\n");
+	}
+	else
+	{
+		BYTE* pData = new BYTE[dwInfoSize];
+
+		// 获取版本信息
+		if (!GetFileVersionInfo(exePath, NULL, dwInfoSize, pData))
+		{
+			::OutputDebugString("GetFileVersionInfo fail\r\n");
+		}
+		else
+		{
+			// 查询版本信息中的具体键值
+			LPVOID lpBuffer;
+			UINT uLength;
+			if (!::VerQueryValue((LPCVOID)pData, _T("\\"), &lpBuffer, &uLength))
+			{
+				::OutputDebugString("GetFileVersionInfo fail\r\n");
+			}
+			else
+			{
+				DWORD dwVerMS;
+				DWORD dwVerLS;
+				dwVerMS = ((VS_FIXEDFILEINFO*)lpBuffer)->dwProductVersionMS;
+				dwVerLS = ((VS_FIXEDFILEINFO*)lpBuffer)->dwProductVersionLS;
+				ver.Format(_T("V%d.%d.%d.%d"), (dwVerMS >> 16), (dwVerMS & 0xFFFF), (dwVerLS >> 16), (dwVerLS & 0xFFFF));
+			}
+		}
+
+		delete pData;
+	}
+}
 
 // CDataSimulatorDlg 对话框
 
