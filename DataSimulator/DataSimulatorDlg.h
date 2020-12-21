@@ -49,6 +49,21 @@ protected:
 	afx_msg void OnBnClickedImageSendingStart();
 	DECLARE_MESSAGE_MAP()
 public:
+	bool   m_bResizeEnable = false;
+	int m_nWindowWidth=716 ;
+	int m_nWindowHeight=369;
+	int m_nButtonUpleftX=34 ;
+	int m_nButtonUpleftY=16;
+	int m_nButtonWidth=118;
+	int m_nButtonHeight=34;
+	POINT oldPiont;
+	int m_nDlgWidth;
+	int m_nDlgHeight;
+	int m_nWidth;
+	int m_nHeight;
+	int m_Multiple_width;
+	int m_Mutiple_heith;
+	bool change_flag;
 	std::string nx_box1_ip;//computer 1 network address
 	std::string nx_box2_ip;//computer 2 network address
 	int nx_box1_port;		//NX computer 1 port number
@@ -86,9 +101,10 @@ public:
 	void    SetClinetMode();
 	void	RefreshWnd(CWnd *pwnd);
 	void    PushTailShowText(CString strText);
+	void    ReSize(int nID);
 	CString		GetModulePath(void);
-
-
+	void    RefreshWindow();
+	void	DrawWindows();
 	bool	m_bClientMode;
 	bool	m_bServerMode;
 	bool    m_bServerSendMode;
@@ -109,8 +125,8 @@ public:
 	CDC		*m_pDC;
 	HDC		m_hDC;
 	CWnd	*m_pwnd;
-	char    m_strShowText[SHOWTEXTLENGTH][255];
-	char    m_nstrShowText[SHOWTEXTLENGTH][255];
+	char    m_strShowText[SHOWTEXTLENGTH*10][255];
+	char    m_nstrShowText[SHOWTEXTLENGTH*10][255];
 	static HWND m_hWnd;				//=AfxGetMainWnd()->m_hWnd;
 	CParameterSetting			parameters_setting_trans;
 	float   m_fScanSpeed;
@@ -131,6 +147,12 @@ public:
 	afx_msg LRESULT sendmessage(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT StopSend(WPARAM wParam, LPARAM lParam);
 	void	ShowText(CWnd *pwnd, CString strText, CRect DrawRect);
+	void    DrawMat(cv::Mat& img, UINT nID);
+	void	DrawMatp(cv::Mat& img);
 	void	ShowText(CWnd *pwnd, char strText[SHOWTEXTLENGTH][255], CRect DrawRect);
 	afx_msg void OnBnClickedImagePrevious();
+	CButton m_Checksendimage;
+	afx_msg void OnBnClickedCheckPicturesend();
+	afx_msg void OnStnClickedStaticShowpicture();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };

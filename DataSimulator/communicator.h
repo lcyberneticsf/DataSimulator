@@ -146,11 +146,13 @@ public:
 	tcp::endpoint eps[8];
 	std::vector<std::string> file_list;
 	int file_amount;
+	static bool image_show;
 	static bool batch_image_load;
 	static bool single_image_load;
 	static bool last_image_load;
 	static bool    m_bServerSendMode;
 	static bool    m_bClientSendMode;
+	static bool m_show_ok;
 	int		counter;
 	float		camera_scan_speed;
 	static  Vsee::VCameraMessageTrans  box_ctrl_msg;

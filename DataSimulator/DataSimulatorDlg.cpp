@@ -183,6 +183,7 @@ void CDataSimulatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHECK_SERVER_SEND, m_checkServerSend);
 	DDX_Control(pDX, IDC_CHECK_SERVER_MODE_SELECT, m_checkServerModeSelect);
 	DDX_Control(pDX, IDC_CHECK_CLIENT_SEND, m_checkClientSend);
+	DDX_Control(pDX, IDC_CHECK_PictureSend, m_Checksendimage);
 }
 
 BEGIN_MESSAGE_MAP(CDataSimulatorDlg, CDialogEx)
@@ -205,6 +206,9 @@ BEGIN_MESSAGE_MAP(CDataSimulatorDlg, CDialogEx)
 	ON_MESSAGE(ID_SENDMESSAGE, &CDataSimulatorDlg::sendmessage)
 	ON_MESSAGE(ID_STOPSEND, &CDataSimulatorDlg::StopSend)
 	ON_BN_CLICKED(IDC_IMAGE_PREVIOUS, &CDataSimulatorDlg::OnBnClickedImagePrevious)
+	ON_BN_CLICKED(IDC_CHECK_PictureSend, &CDataSimulatorDlg::OnBnClickedCheckPicturesend)
+	ON_STN_CLICKED(IDC_STATIC_ShowPicture, &CDataSimulatorDlg::OnStnClickedStaticShowpicture)
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -242,8 +246,12 @@ BOOL CDataSimulatorDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO:  在此添加额外的初始化代码
+	int m_nWindowWidth = 900;
+	int m_nWindowHeight = 500;
+	MoveWindow(0, 0, m_nWindowWidth, m_nWindowHeight, 1);
 	m_hWnd = AfxGetMainWnd()->m_hWnd;            //To get the main Window Handle;
 	m_hMainWnd = m_hWnd;
+	DrawWindows();
 	m_pwnd = GetDlgItem(IDC_STATIC_IMAGE_SHOW);//IDC_SHOWIMAGE
 	//m_pwnd = GetDlgItem(IDC_SHOWIMAGE);//IDC_SHOWIMAGE
 	//pwnd->MoveWindow(35,30,352,288);
@@ -265,7 +273,7 @@ BOOL CDataSimulatorDlg::OnInitDialog()
 	GetDlgItem(IDC_IMAGE_PREVIOUS)->EnableWindow(false);
 	GetDlgItem(IDC_NETWORK_SETTING)->EnableWindow(false);
 	GetDlgItem(IDC_START_NETSERVER)->EnableWindow(false);
-
+	GetDlgItem(IDC_STATIC_ShowPicture)->ShowWindow(false);
 	char IniRead[255];
 	memset(IniRead, 0, 255);
 	char IniPath[255];
@@ -292,6 +300,21 @@ BOOL CDataSimulatorDlg::OnInitDialog()
 
 	SetClinetMode();
 	OnBnClickedCheckBatchLoad();
+
+	//CRect rect;
+	//::GetWindowRect(m_hWnd, rect);
+	//ScreenToClient(rect);
+	//m_nDlgWidth = rect.right - rect.left;
+	//m_nDlgHeight = rect.bottom - rect.top;
+
+	////计算分辨率
+	//m_nWidth = GetSystemMetrics(SM_CXSCREEN);
+	//m_nHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	////计算放大倍数
+	//m_Multiple_width = float(m_nWidth) / float(m_nDlgWidth);
+	//m_Mutiple_heith = float(m_nHeight) / float(m_nDlgHeight);
+	//change_flag = TRUE;//判断onsize执行时oninitdlg是否已经执行了
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -366,7 +389,22 @@ HCURSOR CDataSimulatorDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
+void CDataSimulatorDlg::RefreshWindow()
+{
+	RefreshWnd(m_pwnd);
+	CString strText = "经纬异纤检测数据仿真软件";
+	CRect DrawRect(0, 0, 300, 50);
+	ShowText(m_pwnd, strText, DrawRect);
 
+	strText.Format("相机扫描速度:  %2.2f", camera_scan_speed);
+	CRect DrawRect1(0, 100, 300, 50);
+	ShowText(m_pwnd, strText, DrawRect1);
+
+	strText.Format("服务器地址:%s,端口号:%d", parameters_setting_trans.local_ip, parameters_setting_trans.local_port);
+	CRect DrawRect2(0, 200, 300, 50);
+	ShowText(m_pwnd, strText, DrawRect2);
+
+}
 
 void CDataSimulatorDlg::OnBnClickedNetworkSetting()
 {
@@ -426,7 +464,7 @@ void CDataSimulatorDlg::OnBnClickedNetworkSetting()
 	default:
 		break;
 	}
-	RefreshWnd(m_pwnd);   //clear the print words from the show window;
+	//RefreshWnd(m_pwnd);   //clear the print words from the show window;
 	CString cs_str;
 	string str_str;
 	str_str = cs_str;
@@ -434,17 +472,7 @@ void CDataSimulatorDlg::OnBnClickedNetworkSetting()
 	Point pRect1, pRect2;
 	POINT  pTopLeft, pRightBottom;
 	pTopLeft.x = 5000; pTopLeft.y = 5000; pRightBottom.x = 0; pRightBottom.y = 0;
-	CString strText = "经纬异纤检测数据仿真软件";
-	CRect DrawRect(0, 0, 300, 50);
-	ShowText(m_pwnd, strText, DrawRect);
-
-	strText.Format("相机扫描速度:  %2.2f", camera_scan_speed);
-	CRect DrawRect1(0, 100, 300, 50);
-	ShowText(m_pwnd, strText, DrawRect1);
-
-	strText.Format("服务器地址:%s,端口号:%d", parameters_setting_trans.local_ip, parameters_setting_trans.local_port);
-	CRect DrawRect2(0, 200, 300, 50);
-	ShowText(m_pwnd, strText, DrawRect2);
+	RefreshWindow();
 }
 void  CDataSimulatorDlg::io_thread_fun_run(int beg, int end)
 {
@@ -689,6 +717,15 @@ void CDataSimulatorDlg::OnBnClickedStartNetserver()
 	//	m_bNetParametersSetting = true;
 	//}
 	m_bClientMode = m_checkClientMode.GetCheck();
+	if (m_Checksendimage.GetCheck()==1)
+	{
+		aq::Communicator::image_show = true;
+	}
+	else if(m_Checksendimage.GetCheck()==0)
+	{
+		aq::Communicator::image_show = false;
+	}
+	
 	if (!m_bClientMode)
 	{
 		CString strText;
@@ -814,6 +851,14 @@ void CDataSimulatorDlg::OnBnClickedCheckSingleLoad()
 void CDataSimulatorDlg::OnBnClickedImageNext()
 {
 	// TODO:  在此添加控件通知处理程序代码
+	if (m_Checksendimage.GetCheck() == 1)
+	{
+		aq::Communicator::image_show = true;
+	}
+	else if (!m_Checksendimage.GetCheck() == 0)
+	{
+		aq::Communicator::image_show = false;
+	}
 	Communicator::single_image_load = true;
 	Communicator::last_image_load = false;
 	Communicator::batch_image_load = false;
@@ -1262,7 +1307,14 @@ void    CDataSimulatorDlg::PushTailShowText(CString strText)
 {
 	int i = 0;
 	bool bPush = false;
-	for (i = 0; i < SHOWTEXTLENGTH; i++)
+
+	CRect	WindowRect;
+	GetClientRect(&WindowRect);
+	float m_nHeight = WindowRect.Height();
+	float m_nWidth = WindowRect.Width();
+
+	int magnification = (float)(m_nWidth) / (float)(m_nWindowWidth);
+	for (i = 0; i < SHOWTEXTLENGTH*magnification+4; i++)
 	{
 		if (m_strShowText[i][0] == '\0')
 		{
@@ -1275,7 +1327,7 @@ void    CDataSimulatorDlg::PushTailShowText(CString strText)
 		return;
 	else
 	{
-		for (i = 0; i < SHOWTEXTLENGTH - 1; i++)
+		for (i = 0; i < SHOWTEXTLENGTH*magnification+4 - 1; i++)
 		{
 			strcpy(m_strShowText[i], m_strShowText[i + 1]);
 		}
@@ -1286,7 +1338,7 @@ void    CDataSimulatorDlg::PushTailShowText(CString strText)
 
 void CDataSimulatorDlg::RefreshWnd(CWnd *pwnd)
 {
-
+	pwnd = GetDlgItem(IDC_STATIC_IMAGE_SHOW);
 	//CWnd *pwnd = GetDlgItem(IDC_ShowImage);
 	CRect PictureRect;
 	pwnd->GetClientRect(&PictureRect);
@@ -1366,9 +1418,26 @@ LRESULT CDataSimulatorDlg::ShowCtrlMessage(WPARAM wParam, LPARAM lParam)
 	CString strMsg;
 	int nCtrlSignalling = (int)wParam;
 	Vsee::VCameraMessageTrans *MagneticVolveMsg = nullptr;
+	struct information
+	{
+		std::uint32_t height;
+		std::uint32_t width;
+		std::uint32_t channels;
+		std::uint32_t data_legnth;
+		char* m_picture_data;
+	}*Info;
 
 	//AfxMessageBox(strMsg);
 
+	if (nCtrlSignalling == 5)
+	{
+		Info = (information*)lParam;
+		cv::Mat show_img(Info->height, Info->width, CV_8UC3, Info->m_picture_data);
+		//GetDlgItem(IDC_STATIC_IMAGE_SHOW)->ShowWindow(false);
+		//GetDlgItem(IDC_STATIC_ShowPicture)->ShowWindow(TRUE);
+		std::thread draw_mat(&CDataSimulatorDlg::DrawMatp, this,show_img);
+		draw_mat.detach();
+	}
 	if (nCtrlSignalling == 10)
 	{
 		RefreshWnd(m_pwnd);   //clear the print words from the show window;
@@ -1469,8 +1538,12 @@ void CDataSimulatorDlg::ShowText(CWnd *pwnd, CString strText, CRect DrawRect)
 void CDataSimulatorDlg::ShowText(CWnd *pwnd, char strText[SHOWTEXTLENGTH][255], CRect DrawRect)
 {
 
-	//CWnd *pwnd = GetDlgItem(IDC_ShowImage);
+	CRect	WindowRect;
+	GetClientRect(&WindowRect);
+	float m_nHeight = WindowRect.Height();
+	float m_nWidth = WindowRect.Width();
 
+	int magnification = (float)(m_nWidth) / (float)(m_nWindowWidth);
 
 	CClientDC pDc(pwnd);
 	CPen pen(PS_SOLID, 5, RGB(255, 0, 0));//创建一个画笔工具	
@@ -1506,7 +1579,17 @@ void CDataSimulatorDlg::ShowText(CWnd *pwnd, char strText[SHOWTEXTLENGTH][255], 
 	pDc.SetBkColor(RGB(255, 255, 0));
 	//pDc.TextOut(0, 0, "写字");
 	int i = 0;
-	for (i = 0; i < SHOWTEXTLENGTH; i++)
+	if(magnification>1)
+		for (i = 0; i < SHOWTEXTLENGTH*magnification+4; i++)
+		{
+		if (m_strShowText[i][0] != '\0')
+		{
+			CRect TextRect(10, i * 50, 600, (i + 1) * 50);
+			pDc.DrawText(m_strShowText[i], TextRect, DT_SINGLELINE | DT_LEFT | DT_VCENTER); //显示文本
+		}
+		}
+	else
+	for (i = 0; i < SHOWTEXTLENGTH*magnification; i++)
 	{
 		if (m_strShowText[i][0] != '\0')
 		{
@@ -1522,9 +1605,338 @@ void CDataSimulatorDlg::ShowText(CWnd *pwnd, char strText[SHOWTEXTLENGTH][255], 
 void CDataSimulatorDlg::OnBnClickedImagePrevious()
 {
 	// TODO:  在此添加控件通知处理程序代码
+	if (m_Checksendimage.GetCheck() == 1)
+	{
+		aq::Communicator::image_show = true;
+	}
+	else if (!m_Checksendimage.GetCheck() == 0)
+	{
+		aq::Communicator::image_show = false;
+	}
 	Communicator::single_image_load = false;
 	Communicator::last_image_load = true;
 	Communicator::batch_image_load = false;
 	m_checkBatchLoad.SetCheck(false);
 	m_checkSingleLoad.SetCheck(true);
+}
+
+void CDataSimulatorDlg::DrawMat(cv::Mat& img, UINT nID)
+{
+	cv::Mat imgTmp = img;
+	CRect rect;
+	GetDlgItem(nID)->GetClientRect(&rect); // 获取控件大小  
+	//cv::resize(img, imgTmp, cv::Size(rect.Width(), rect.Height()));// 缩放Mat并备份 // 转一下格式 ,这段可以放外面,
+	//switch (imgTmp.channels())
+	//{
+	//case 1:
+	//	cv::cvtColor(imgTmp, imgTmp, CV_GRAY2BGRA); // GRAY单通道
+	//	break;
+	//case 3:
+	//	cv::cvtColor(imgTmp, imgTmp, CV_BGR2BGRA); // BGR三通道 
+	//	break;
+	//default:
+	//	break;
+	//}
+	float magnification = (float)(rect.Width()) / (float)(imgTmp.cols);
+	cv::Mat image_max(imgTmp.cols * magnification, imgTmp.rows * magnification, imgTmp.type());
+	cv::resize(imgTmp, image_max, Size(imgTmp.cols * magnification, imgTmp.rows * magnification));
+	//int pixelBytes = imgTmp.channels() * (imgTmp.depth() + 1); // 计算一个像素多少个字节 // 制作bitmapinfo(数据头) 
+	//BITMAPINFO bitInfo;
+	//bitInfo.bmiHeader.biBitCount = 8 * pixelBytes;
+	//bitInfo.bmiHeader.biWidth = imgTmp.cols;
+	//bitInfo.bmiHeader.biHeight = -imgTmp.rows;
+	//bitInfo.bmiHeader.biPlanes = 1;
+	//bitInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); bitInfo.bmiHeader.biCompression = BI_RGB;
+	//bitInfo.bmiHeader.biClrImportant = 0;
+	//bitInfo.bmiHeader.biClrUsed = 0;
+	//bitInfo.bmiHeader.biSizeImage = 0; 
+	//bitInfo.bmiHeader.biXPelsPerMeter = 0;
+	//bitInfo.bmiHeader.biYPelsPerMeter = 0; // Mat.data + bitmap数据头 -> MFC 
+	int pixelBytes = image_max.channels() * (image_max.depth() + 1); // 计算一个像素多少个字节 // 制作bitmapinfo(数据头) 
+	BITMAPINFO bitInfo;
+	bitInfo.bmiHeader.biBitCount = 8 * pixelBytes;
+	bitInfo.bmiHeader.biWidth = image_max.cols;
+	bitInfo.bmiHeader.biHeight = -image_max.rows;
+	bitInfo.bmiHeader.biPlanes = 1;
+	bitInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); bitInfo.bmiHeader.biCompression = BI_RGB;
+	bitInfo.bmiHeader.biClrImportant = 0;
+	bitInfo.bmiHeader.biClrUsed = 0;
+	bitInfo.bmiHeader.biSizeImage = 0;
+	bitInfo.bmiHeader.biXPelsPerMeter = 0;
+	bitInfo.bmiHeader.biYPelsPerMeter = 0; // Mat.data + bitmap数据头 -> MFC 
+	CDC* pDC = GetDlgItem(nID)->GetDC();
+	int nYbegin = 0;
+	//int nHeight = int(100.00*(float)(rect.Width()) / (float)(imgTmp.cols));
+	//nYbegin = (rect.Height() - nHeight) / 2;
+	nYbegin = (rect.Height() - image_max.rows) / 2;
+
+	CDC memDC;
+	CDC * dc = GetDC();
+	CBitmap *oldBitmap;
+	memDC.CreateCompatibleDC(pDC);
+	//CRect rect;
+	//GetDlgItem(IDC_STATIC_IMAGE_SHOW)->GetClientRect(&rect); // 获取控件大小  
+	//ScreenToClient(&rect);
+	CBitmap bufferMemBitmap;
+	GetClientRect(&rect);
+	//CRect rect1;
+	//GetDlgItem(IDC_BUTTON_HARDWARE_TEST)->GetWindowRect(&rect1);//获取控件的屏幕坐标
+	//GetDlgItem(IDC_BUTTON_HARDWARE_TEST)->GetWindowRect(&rect1);//获取控件的屏幕坐标
+	//ScreenToClient(&rect1);//转换为对话框上的客户坐标
+	CRect rect2;
+	GetDlgItem(IDC_STATIC_ShowPicture)->GetWindowRect(&rect2);
+	ScreenToClient(&rect2);
+	bufferMemBitmap.CreateCompatibleBitmap(pDC, rect2.Width(), rect2.Height());
+	oldBitmap = memDC.SelectObject(&bufferMemBitmap);
+	CBrush brush = GetSysColor(COLOR_WINDOW);
+	//memDC.FillRect(CRect(0, 0, rect.Width(), rect.Height()), &brush);
+	memDC.FillRect(CRect(rect.left, rect.top, rect2.Width(), rect2.Height()), &brush);
+	// 使用memDC做绘图操作
+
+	// 将内存缓冲DC拷贝至当前DC
+	pDC->BitBlt(rect.left, rect.top, rect2.Width(), rect2.Height(), &memDC, 0, 0, SRCCOPY);
+	bufferMemBitmap.DeleteObject();
+	brush.DeleteObject();
+	memDC.DeleteDC();
+
+	//::StretchDIBits(pDC->GetSafeHdc(), 0, nYbegin, rect.Width(), nHeight, 0, 0, imgTmp.cols, imgTmp.rows, imgTmp.data, &bitInfo, DIB_RGB_COLORS, SRCCOPY);
+	::StretchDIBits(pDC->GetSafeHdc(), 0, nYbegin, image_max.cols, image_max.rows, 0, 0, image_max.cols, image_max.rows, image_max.data, &bitInfo, DIB_RGB_COLORS, SRCCOPY);
+	ReleaseDC(pDC);
+	aq::Communicator::m_show_ok = true;
+}
+
+void CDataSimulatorDlg::DrawMatp(cv::Mat& img)
+{
+	cv::Mat imgTmp = img;
+	CRect rect;
+	GetDlgItem(IDC_STATIC_ShowPicture)->GetClientRect(&rect); // 获取控件大小  
+	//cv::resize(img, imgTmp, cv::Size(rect.Width(), rect.Height()));// 缩放Mat并备份 // 转一下格式 ,这段可以放外面,
+	//switch (imgTmp.channels())
+	//{
+	//case 1:
+	//	cv::cvtColor(imgTmp, imgTmp, CV_GRAY2BGRA); // GRAY单通道
+	//	break;
+	//case 3:
+	//	cv::cvtColor(imgTmp, imgTmp, CV_BGR2BGRA); // BGR三通道 
+	//	break;
+	//default:
+	//	break;
+	//}
+	float magnification = (float)(rect.Width()) / (float)(imgTmp.cols);
+	cv::Mat image_max = imgTmp.clone();
+	cv::resize(image_max, image_max, Size(imgTmp.cols * magnification, imgTmp.rows * magnification));
+	//int pixelBytes = imgTmp.channels() * (imgTmp.depth() + 1); // 计算一个像素多少个字节 // 制作bitmapinfo(数据头) 
+	//BITMAPINFO bitInfo;
+	//bitInfo.bmiHeader.biBitCount = 8 * pixelBytes;
+	//bitInfo.bmiHeader.biWidth = imgTmp.cols;
+	//bitInfo.bmiHeader.biHeight = -imgTmp.rows;
+	//bitInfo.bmiHeader.biPlanes = 1;
+	//bitInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); bitInfo.bmiHeader.biCompression = BI_RGB;
+	//bitInfo.bmiHeader.biClrImportant = 0;
+	//bitInfo.bmiHeader.biClrUsed = 0;
+	//bitInfo.bmiHeader.biSizeImage = 0; 
+	//bitInfo.bmiHeader.biXPelsPerMeter = 0;
+	//bitInfo.bmiHeader.biYPelsPerMeter = 0; // Mat.data + bitmap数据头 -> MFC 
+	int pixelBytes = image_max.channels() * (image_max.depth() + 1); // 计算一个像素多少个字节 // 制作bitmapinfo(数据头) 
+	BITMAPINFO bitInfo;
+	bitInfo.bmiHeader.biBitCount = 8 * pixelBytes;
+	bitInfo.bmiHeader.biWidth = image_max.cols;
+	bitInfo.bmiHeader.biHeight = -image_max.rows;
+	bitInfo.bmiHeader.biPlanes = 1;
+	bitInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER); bitInfo.bmiHeader.biCompression = BI_RGB;
+	bitInfo.bmiHeader.biClrImportant = 0;
+	bitInfo.bmiHeader.biClrUsed = 0;
+	bitInfo.bmiHeader.biSizeImage = 0;
+	bitInfo.bmiHeader.biXPelsPerMeter = 0;
+	bitInfo.bmiHeader.biYPelsPerMeter = 0; // Mat.data + bitmap数据头 -> MFC 
+	CDC* pDC = GetDlgItem(IDC_STATIC_ShowPicture)->GetDC();
+	int nYbegin = 0;
+	//int nHeight = int(100.00*(float)(rect.Width()) / (float)(imgTmp.cols));
+	//nYbegin = (rect.Height() - nHeight) / 2;
+	nYbegin = (rect.Height() - image_max.rows) / 2;
+
+	CDC memDC;
+	CDC * dc = GetDC();
+	CBitmap *oldBitmap;
+	memDC.CreateCompatibleDC(pDC);
+	//CRect rect;
+	//GetDlgItem(IDC_STATIC_IMAGE_SHOW)->GetClientRect(&rect); // 获取控件大小  
+	//ScreenToClient(&rect);
+	CBitmap bufferMemBitmap;
+	GetClientRect(&rect);
+	//CRect rect1;
+	//GetDlgItem(IDC_BUTTON_HARDWARE_TEST)->GetWindowRect(&rect1);//获取控件的屏幕坐标
+	//GetDlgItem(IDC_BUTTON_HARDWARE_TEST)->GetWindowRect(&rect1);//获取控件的屏幕坐标
+	//ScreenToClient(&rect1);//转换为对话框上的客户坐标
+	CRect rect2;
+	GetDlgItem(IDC_STATIC_ShowPicture)->GetWindowRect(&rect2);
+	ScreenToClient(&rect2);
+	bufferMemBitmap.CreateCompatibleBitmap(pDC, rect2.Width(), rect2.Height());
+	oldBitmap = memDC.SelectObject(&bufferMemBitmap);
+	CBrush brush = GetSysColor(COLOR_WINDOW);
+	//memDC.FillRect(CRect(0, 0, rect.Width(), rect.Height()), &brush);
+	memDC.FillRect(CRect(rect.left, rect.top, rect2.Width(), rect2.Height()), &brush);
+	// 使用memDC做绘图操作
+
+	// 将内存缓冲DC拷贝至当前DC
+	pDC->BitBlt(rect.left, rect.top, rect2.Width(), rect2.Height(), &memDC, 0, 0, SRCCOPY);
+	bufferMemBitmap.DeleteObject();
+	brush.DeleteObject();
+	memDC.DeleteDC();
+
+	//::StretchDIBits(pDC->GetSafeHdc(), 0, nYbegin, rect.Width(), nHeight, 0, 0, imgTmp.cols, imgTmp.rows, imgTmp.data, &bitInfo, DIB_RGB_COLORS, SRCCOPY);
+	::StretchDIBits(pDC->GetSafeHdc(), 0, nYbegin, image_max.cols, image_max.rows, 0, 0, image_max.cols, image_max.rows, image_max.data, &bitInfo, DIB_RGB_COLORS, SRCCOPY);
+	ReleaseDC(pDC);
+	aq::Communicator::m_show_ok = true;
+}
+
+void CDataSimulatorDlg::OnBnClickedCheckPicturesend()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	//CWnd *pWnd;
+	//pWnd = GetDlgItem(IDC_SCAN_SPEED_SETTING);    //获取控件指针，IDC_BUTTON1为控件ID号
+	//CRect rect;    // 获取控件变化前大小
+	//pWnd->GetWindowRect(&rect);
+	//ScreenToClient(&rect); // 将控件大小转换为在对话框中的区域坐标
+	//m_nButtonHeight = rect.Height();
+	//m_nButtonWidth = rect.Width();
+	//m_nButtonUpleftX = rect.TopLeft().x;
+	//m_nButtonUpleftY = rect.TopLeft().y;
+	if (m_Checksendimage.GetCheck()==1)
+	{
+		aq::Communicator::image_show = TRUE;
+		GetDlgItem(IDC_STATIC_ShowPicture)->ShowWindow(TRUE);
+		GetDlgItem(IDC_STATIC_IMAGE_SHOW)->ShowWindow(FALSE);
+		
+	}
+	else if (m_Checksendimage.GetCheck() == 0)
+	{
+		aq::Communicator::image_show = FALSE;
+		GetDlgItem(IDC_STATIC_IMAGE_SHOW)->ShowWindow(TRUE);
+		GetDlgItem(IDC_STATIC_ShowPicture)->ShowWindow(FALSE);
+		UpdateData(true);
+	}
+}
+
+
+void CDataSimulatorDlg::OnStnClickedStaticShowpicture()
+{
+	// TODO:  在此添加控件通知处理程序代码
+}
+
+
+void CDataSimulatorDlg::OnSize(UINT nType, int cx, int cy)
+{
+	CDialogEx::OnSize(nType, cx, cy);
+	if (m_bResizeEnable)
+		DrawWindows();
+	// TODO:  在此处添加消息处理程序代码
+	//if (change_flag)//如果确定oninitdlg已经调用完毕.
+	//{
+	//	ReSize(IDC_SCAN_SPEED_SETTING);
+	//	ReSize(IDC_FILELIST_PATH);
+	//	ReSize(IDC_CHECK_BATCH_LOAD);
+	//	ReSize(IDC_CHECK_SINGLE_LOAD);
+	//	ReSize(IDC_CHECK_PictureSend);
+	//	ReSize(IDC_IMAGE_NEXT);
+	//	ReSize(IDC_IMAGE_PREVIOUS);
+	//	ReSize(IDC_NETWORK_SETTING);
+	//	ReSize(IDC_START_NETSERVER);
+
+	//	ReSize(IDOK);
+	//	ReSize(IDCANCEL);
+	//	ReSize(IDC_STATIC_IMAGE_SHOW);
+	//	ReSize(IDC_STATIC_ShowPicture);
+	//	//恢复放大倍数，并保存 (确保还原时候能够还原到原来的大小)
+
+	//	m_Multiple_width = float(1) / m_Multiple_width;
+	//	m_Mutiple_heith = float(1) / m_Mutiple_heith;
+	//}
+
+}
+void CDataSimulatorDlg::DrawWindows()
+{
+	m_bResizeEnable = true;
+	CRect	WindowRect;
+	GetClientRect(&WindowRect);
+	int m_nWindowWidth_new = WindowRect.Width();
+	int m_nWindowHeight_new = WindowRect.Height();
+
+	CWnd *pWnd;
+	//pWnd = GetDlgItem(IDC_SCAN_SPEED_SETTING);    //获取控件指针，IDC_BUTTON1为控件ID号
+	//CRect rect;    // 获取控件变化前大小
+	//pWnd->GetWindowRect(&rect);
+	////ScreenToClient(&rect); // 将控件大小转换为在对话框中的区域坐标
+	//m_nButtonHeight = rect.Height();
+	//m_nButtonWidth = rect.Width();
+	//m_nButtonUpleftX = rect.TopLeft().x;
+	//m_nButtonUpleftY = rect.TopLeft().y;
+
+	int nButtonNum = 9;
+	int nButtonGap = (m_nWindowHeight_new - nButtonNum * m_nButtonHeight - m_nButtonUpleftX) / (nButtonNum - 1);
+
+	//pWnd = GetDlgItem(IDC_SCAN_SPEED_SETTING);    //获取控件指针，IDC_BUTTON1为控件ID号
+	//pWnd->SetWindowPos(NULL, m_nButtonUpleftX, m_nButtonUpleftY + 0 * (m_nButtonHeight + nButtonGap), 0, 0, SWP_NOZORDER | SWP_NOSIZE);    
+	//CWnd *pWnd1 = GetDlgItem(IDC_FILELIST_PATH);
+	//pWnd1->SetWindowPos(NULL, m_nButtonUpleftX, m_nButtonUpleftY + 1 * (m_nButtonHeight + nButtonGap), 0, 0, SWP_NOZORDER | SWP_NOSIZE);    
+	//CWnd *pWnd2 = GetDlgItem(IDC_CHECK_BATCH_LOAD);
+	//pWnd2->SetWindowPos(NULL, m_nButtonUpleftX, m_nButtonUpleftY + 2 * (m_nButtonHeight + nButtonGap), 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	//CWnd *pWnd3 = GetDlgItem(IDC_CHECK_SINGLE_LOAD);
+	//pWnd3->SetWindowPos(NULL, m_nButtonUpleftX, m_nButtonUpleftY + 3 * (m_nButtonHeight + nButtonGap), 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	//CWnd *pWnd4 = GetDlgItem(IDC_CHECK_PictureSend);
+	//pWnd4->SetWindowPos(NULL, m_nButtonUpleftX, m_nButtonUpleftY + 4 * (m_nButtonHeight + nButtonGap), 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	//CWnd *pWnd5 = GetDlgItem(IDC_IMAGE_NEXT);
+	//pWnd5->SetWindowPos(NULL, m_nButtonUpleftX, m_nButtonUpleftY + 5 * (m_nButtonHeight + nButtonGap), 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	//CWnd *pWnd6 = GetDlgItem(IDC_IMAGE_PREVIOUS);
+	//pWnd6->SetWindowPos(NULL, m_nButtonUpleftX, m_nButtonUpleftY + 6 * (m_nButtonHeight + nButtonGap), 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	//CWnd *pWnd7 = GetDlgItem(IDC_NETWORK_SETTING);
+	//pWnd7->SetWindowPos(NULL, m_nButtonUpleftX, m_nButtonUpleftY + 7 * (m_nButtonHeight + nButtonGap), 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	//CWnd *pWnd8 = GetDlgItem(IDC_START_NETSERVER);
+	//pWnd8->SetWindowPos(NULL, m_nButtonUpleftX, m_nButtonUpleftY + 8 * (m_nButtonHeight + nButtonGap), 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+	GetDlgItem(IDC_SCAN_SPEED_SETTING)->MoveWindow(m_nButtonUpleftX, m_nButtonUpleftY + 0 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDC_FILELIST_PATH)->MoveWindow(m_nButtonUpleftX, m_nButtonUpleftY + 1 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDC_CHECK_BATCH_LOAD)->MoveWindow(m_nButtonUpleftX, m_nButtonUpleftY + 2 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDC_CHECK_SINGLE_LOAD)->MoveWindow(m_nButtonUpleftX, m_nButtonUpleftY + 3 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDC_CHECK_PictureSend)->MoveWindow(m_nButtonUpleftX, m_nButtonUpleftY + 4 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDC_IMAGE_NEXT)->MoveWindow(m_nButtonUpleftX, m_nButtonUpleftY + 5 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDC_IMAGE_PREVIOUS)->MoveWindow(m_nButtonUpleftX, m_nButtonUpleftY + 6 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDC_NETWORK_SETTING)->MoveWindow(m_nButtonUpleftX, m_nButtonUpleftY + 7 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDC_START_NETSERVER)->MoveWindow(m_nButtonUpleftX, m_nButtonUpleftY + 8 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	
+	GetDlgItem(IDOK)->MoveWindow(m_nButtonUpleftX + m_nButtonWidth + (m_nWindowWidth_new - m_nButtonUpleftX - 3*m_nButtonWidth)/3, m_nButtonUpleftY + 8 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDCANCEL)->MoveWindow(m_nWindowWidth_new - m_nButtonUpleftX - m_nButtonWidth - (m_nWindowWidth_new - m_nButtonUpleftX - 3 * m_nButtonWidth) / 3, m_nButtonUpleftY + 8 * (m_nButtonHeight + nButtonGap), m_nButtonWidth, m_nButtonHeight);
+	GetDlgItem(IDC_STATIC_IMAGE_SHOW)->MoveWindow(m_nButtonUpleftX + m_nButtonWidth + 20, m_nButtonUpleftY, m_nWindowWidth_new - (m_nButtonUpleftX + m_nButtonWidth + 20)-10, m_nButtonUpleftY + 8 * (m_nButtonHeight + nButtonGap)-20);
+	GetDlgItem(IDC_STATIC_ShowPicture)->MoveWindow(m_nButtonUpleftX + m_nButtonWidth + 20, m_nButtonUpleftY, m_nWindowWidth_new - (m_nButtonUpleftX + m_nButtonWidth + 20)-10, m_nButtonUpleftY + 8 * (m_nButtonHeight + nButtonGap) - 20);
+	if (m_Checksendimage.GetCheck() == 1)
+	{
+		GetDlgItem(IDC_STATIC_ShowPicture)->ShowWindow(TRUE);
+		GetDlgItem(IDC_STATIC_IMAGE_SHOW)->ShowWindow(FALSE);
+	}
+	if (m_Checksendimage.GetCheck() == 0)
+	{
+		GetDlgItem(IDC_STATIC_ShowPicture)->ShowWindow(FALSE);
+		GetDlgItem(IDC_STATIC_IMAGE_SHOW)->ShowWindow(TRUE);
+	}
+	RedrawWindow();
+}
+void CDataSimulatorDlg::ReSize(int nID)
+{
+	CRect Rect;
+	GetDlgItem(nID)->GetWindowRect(Rect);
+	ScreenToClient(Rect);
+	//计算控件左上角点 
+	CPoint OldTLPoint, TLPoint;
+	OldTLPoint = Rect.TopLeft();
+	TLPoint.x = long(OldTLPoint.x *m_Multiple_width);
+	TLPoint.y = long(OldTLPoint.y * m_Mutiple_heith);
+
+	//计算控件右下角点
+	CPoint OldBRPoint, BRPoint;
+	OldBRPoint = Rect.BottomRight();
+	BRPoint.x = long(OldBRPoint.x *m_Multiple_width);
+	BRPoint.y = long(OldBRPoint.y * m_Mutiple_heith);
+	//移动控件到新矩形
+
+	Rect.SetRect(TLPoint, BRPoint);
+	GetDlgItem(nID)->MoveWindow(Rect, TRUE);
 }
