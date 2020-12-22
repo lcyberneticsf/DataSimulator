@@ -183,7 +183,6 @@ void CDataSimulatorDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHECK_SERVER_SEND, m_checkServerSend);
 	DDX_Control(pDX, IDC_CHECK_SERVER_MODE_SELECT, m_checkServerModeSelect);
 	DDX_Control(pDX, IDC_CHECK_CLIENT_SEND, m_checkClientSend);
-	DDX_Control(pDX, IDC_CHECK_PictureSend, m_Checksendimage);
 }
 
 BEGIN_MESSAGE_MAP(CDataSimulatorDlg, CDialogEx)

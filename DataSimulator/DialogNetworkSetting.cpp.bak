@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include "DataSimulator.h"
 #include "DialogNetworkSetting.h"
-#include "DataSimulatorDlg.h"
 #include "afxdialogex.h"
 
 // CDialogNetworkSetting ¶Ô»°¿ò

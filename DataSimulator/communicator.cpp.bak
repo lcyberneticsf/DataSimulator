@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "communicator.h"
-#include "DataSimulator.h"
-#include "DataSimulatorDlg.h"
+
 #include "VCameraEnum.h"
 //#include "VCameraMessage.h"
 //#include "VCameraFrame.h"
@@ -13,24 +12,13 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 using namespace Vsee;
-bool aq::Communicator::image_show = false;
+
 bool aq::Communicator::batch_image_load = true;
 bool aq::Communicator::single_image_load = false;
-bool aq::Communicator::last_image_load = false;
 bool aq::Communicator::m_bServerSendMode=true;
 bool aq::Communicator::m_bClientSendMode=false;
-bool aq::Communicator::m_show_ok = true;
 Vsee::VCameraMessageTrans  aq::Communicator::box_ctrl_msg;       //use to transmit control parameters from server to box;
 extern HWND m_hMainWnd;
-
-struct information
-{
-	std::uint32_t height;
-	std::uint32_t width;
-	std::uint32_t channels;
-	std::uint32_t data_legnth;
-	char* m_picture_data;
-}Info1;
 
 std::vector<std::string> aq::Communicator::split(std::string str, char seg)
 {
@@ -906,7 +894,7 @@ Function:
 */
 bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camera_number)
 {
-	send_ok = false;
+
 	if (!m_bClientSendMode)  // if mode is client receive,and server send image mode
 	{
 		while (true)
@@ -1001,14 +989,15 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 			nHeight = frame.height;
 
 			int file_total = file_list.size();
-			int file_countr = -1;
+			int file_countr = 0;
 
-			while (file_countr < file_total-1)
+			while (file_countr < file_total - 1)
 			{
 				if (aq::Communicator::batch_image_load)
 				{
-					file_countr++;
+
 					file_path = file_list[file_countr];
+					file_countr++;
 					image = cv::imread(file_path);
 					nWidth = image.cols;
 					nHeight = image.rows;
@@ -1023,24 +1012,8 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 
 					char* MsgPost = new char[64];
 					strcpy(MsgPost, file_path.c_str());
-					
-					if (image_show)
-					{
-						//while (!m_show_ok)
-						//{
-						//	Sleep(10);
-						//}
-						information Info;
-						Info.channels = nChannnels;
-						Info.height = nHeight;
-						Info.width = nWidth;
-						Info.data_legnth = length;
-						Info.m_picture_data = (char*)image.data;
-						//m_show_ok = false;
-						::PostMessage(m_hMainWnd, ID_SHOWCTRLMESSAGE, 5, (LPARAM)&Info);
-					}
-					else
-						::PostMessage(m_hMainWnd, ID_SHOWCTRLMESSAGE, 10, (LPARAM)MsgPost);
+					::PostMessage(m_hMainWnd, ID_SHOWCTRLMESSAGE, 10, (LPARAM)MsgPost);
+
 					//data_buffer_.clear();
 					//std::int64_t size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), 8));
 					size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), sizeof(VCameraMessageTrans)));
@@ -1076,76 +1049,8 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 				else if (aq::Communicator::single_image_load)
 				{
 					aq::Communicator::single_image_load = false;
-					file_countr++;
-					file_path = file_list[file_countr];		
-					image = cv::imread(file_path);
-					nWidth = image.cols;
-					nHeight = image.rows;
-					nChannnels = image.channels();
-					msg.width = image.cols;
-					msg.height = image.rows;
-					msg.channels = image.channels();
-					length = nWidth*nHeight*nChannnels;
-					msg.magnetic_valve_num = camera_number;    //To indicate the camera series number is the 4th;
-					char* MsgPost = new char[64];
-					strcpy(MsgPost, file_path.c_str());
-					if (image_show)
-					{
-						Info1.channels = nChannnels;
-						Info1.height = nHeight;
-						Info1.width = nWidth;
-						Info1.data_legnth = length;
-						Info1.m_picture_data = (char*)image.data;
-						::PostMessage(m_hMainWnd, ID_SHOWCTRLMESSAGE, 5, (LPARAM)&Info1);
-					}
-					else
-						::PostMessage(m_hMainWnd, ID_SHOWCTRLMESSAGE, 10, (LPARAM)MsgPost);
-						::PostMessage(m_hMainWnd, ID_STOPSEND, file_countr, 0);
-					//data_buffer_.clear();
-					//std::int64_t size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), 8));
-					size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), sizeof(VCameraMessageTrans)));
-					VCameraMessageTrans* msg2 = (VCameraMessageTrans*)data_buffer_.data();
-					nWidth = msg2->width;
-					nHeight = msg2->height;
-					int nSignalling = msg2->signalling;
-
-					if (size != 0)
-					{
-						//sessions[0]->sendMessage(msg);
-						{
-							auto& io = socket_->get_io_service();
-							if (!socket_->is_open())
-								return false;
-							asio::error_code er;
-							auto buf = asio::buffer(&msg, sizeof(msg));
-							int nLenght = msg.byteSize();
-							socket_->write_some(buf);
-
-							//auto buf = asio::buffer(msg.bytes(), msg.byteSize());
-							buf = asio::buffer(image.data, length);
-
-							//asio::async_write(_socket, buf, [keep = std::move(msg)](asio::error_code, std::size_t){});
-							//asio::write(*_socket, buf, NULL, &er);
-							socket_->write_some(buf);
-						}
-						std::cout << "client:ip:" << socket_->remote_endpoint().address() << "   port:" << socket_->remote_endpoint().port() << std::endl;
-					}
-					else
-					{
-						std::this_thread::sleep_for(std::chrono::milliseconds(1000));;
-					}
-				}
-				else if (aq::Communicator::last_image_load)
-				{
-					aq::Communicator::last_image_load = false;
-					if (file_countr >= 1)
-					{
-						file_countr--;					
-					}
-					else
-					{
-					}
 					file_path = file_list[file_countr];
+					file_countr++;
 					image = cv::imread(file_path);
 					nWidth = image.cols;
 					nHeight = image.rows;
@@ -1155,20 +1060,7 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 					msg.channels = image.channels();
 					length = nWidth*nHeight*nChannnels;
 					msg.magnetic_valve_num = camera_number;    //To indicate the camera series number is the 4th;
-					char* MsgPost = new char[64];
-					strcpy(MsgPost, file_path.c_str());
-					if (image_show)
-					{
-						Info1.channels = nChannnels;
-						Info1.height = nHeight;
-						Info1.width = nWidth;
-						Info1.data_legnth = length;
-						Info1.m_picture_data = (char*)image.data;
-						::PostMessage(m_hMainWnd, ID_SHOWCTRLMESSAGE, 5, (LPARAM)&Info1);
-					}
-					else
-						::PostMessage(m_hMainWnd, ID_SHOWCTRLMESSAGE, 10, (LPARAM)MsgPost);
-						::PostMessage(m_hMainWnd, ID_STOPSEND, file_countr, 0);
+
 					//data_buffer_.clear();
 					//std::int64_t size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), 8));
 					size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), sizeof(VCameraMessageTrans)));
@@ -1208,8 +1100,6 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 					std::this_thread::sleep_for(std::chrono::milliseconds(300));;
 				}
 			}
-			send_ok = true;
-			::PostMessage(m_hMainWnd, ID_SENDMESSAGE, send_ok, 0);
 		}
 		catch (...)
 		{

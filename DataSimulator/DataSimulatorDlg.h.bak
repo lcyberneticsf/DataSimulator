@@ -101,10 +101,9 @@ public:
 	void    SetClinetMode();
 	void	RefreshWnd(CWnd *pwnd);
 	void    PushTailShowText(CString strText);
-	void    ReSize(int nID);
 	CString		GetModulePath(void);
-	void    RefreshWindow();
-	void	DrawWindows();
+
+
 	bool	m_bClientMode;
 	bool	m_bServerMode;
 	bool    m_bServerSendMode;
@@ -117,7 +116,7 @@ public:
 	CButton m_checkServerModeSelect;
 	CButton	m_checkClientMode;
 	bool    m_bNetParametersSetting;
-	float     camera_scan_speed;    //Camera scan speed,the unit is K.
+	int     camera_scan_speed;    //Camera scan speed,the unit is K.
 
 	int		m_nRectWidth;
 	int		m_nRectHeight;
@@ -125,8 +124,7 @@ public:
 	CDC		*m_pDC;
 	HDC		m_hDC;
 	CWnd	*m_pwnd;
-	char    m_strShowText[SHOWTEXTLENGTH*10][255];
-	char    m_nstrShowText[SHOWTEXTLENGTH*10][255];
+	char    m_strShowText[SHOWTEXTLENGTH][255];
 	static HWND m_hWnd;				//=AfxGetMainWnd()->m_hWnd;
 	CParameterSetting			parameters_setting_trans;
 	float   m_fScanSpeed;
@@ -144,15 +142,6 @@ public:
 	afx_msg void OnBnClickedCheckClientSend();
 	afx_msg void OnBnClickedScanSpeedSetting();
 	afx_msg LRESULT ShowCtrlMessage(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT sendmessage(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT StopSend(WPARAM wParam, LPARAM lParam);
 	void	ShowText(CWnd *pwnd, CString strText, CRect DrawRect);
-	void    DrawMat(cv::Mat& img, UINT nID);
-	void	DrawMatp(cv::Mat& img);
 	void	ShowText(CWnd *pwnd, char strText[SHOWTEXTLENGTH][255], CRect DrawRect);
-	afx_msg void OnBnClickedImagePrevious();
-	CButton m_Checksendimage;
-	afx_msg void OnBnClickedCheckPicturesend();
-	afx_msg void OnStnClickedStaticShowpicture();
-	afx_msg void OnSize(UINT nType, int cx, int cy);
 };
