@@ -77,6 +77,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>F:\AIDI\aidi_libs\protobuf-3.5.1\include;F:\AIDI\aidi_libs\335\opencv3.3.0.0.1\include;F:\AIDI\aidi_libs\410\aidi_vision_410\include;F:\aqrose工程\01经纬嵌入开发\软件开发\DataSimulator\asio;$(IncludePath)</IncludePath>
     <ReferencePath>F:\AIDI\aidi_libs\protobuf-3.5.1\build\Debug\x64;F:\AIDI\aidi_libs\410\aidi_vision_410\Build\Debug\x64;F:\AIDI\aidi_libs\335\opencv3.3.0.0.1\build\Debug\x64;$(ReferencePath)</ReferencePath>
+    <LibraryPath>G:\weisong\aidi_libs\334\boost_regex-vc120.1.59.0.0\build\Debug\x64;G:\weisong\aidi_libs\334\boost_thread-vc120.1.59.0.0\build\Debug\x64;G:\weisong\aidi_libs\334\boost_chrono-vc120.1.59.0.0\build\Debug\x64;G:\weisong\aidi_libs\334\boost_date_time-vc120.1.59.0.0\build\Debug\x64;G:\weisong\aidi_libs\334\boost_filesystem-vc120.1.59.0.0\build\Debug\x64;G:\weisong\aidi_libs\334\boost_system-vc120.1.59.0.0\build\Debug\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -124,7 +125,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>F:\AIDI\aidi_libs\410\aidi_vision_410\Build\Debug\x64;F:\AIDI\aidi_libs\protobuf-3.5.1\build\Debug\x64;F:\AIDI\aidi_libs\335\opencv3.3.0.0.1\build\Debug\x64;F:\aqrose工程\01经纬嵌入开发\软件开发\DataSimulator\VCameraCore\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libprotobufd.lib;opencv_world300d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libprotobufd.lib;opencv_world300d.lib;libboost_system-vc120-mt-gd-1_59.lib;libboost_date_time-vc120-mt-gd-1_59.lib;libboost_chrono-vc120-mt-gd-1_59.lib;libboost_thread-vc120-mt-gd-1_59.lib;libboost_regex-vc120-mt-gd-1_59.lib;libboost_filesystem-vc120-mt-gd-1_59.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>

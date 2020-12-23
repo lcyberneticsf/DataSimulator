@@ -123,14 +123,14 @@ bool aq::Communicator::tcp_connect(std::string _ip, int _port, std::string &_err
         return false;
     }
 
-	io_service_ = new asio::io_service;
 	ep_ = new asio::ip::tcp::endpoint(asio::ip::address::from_string(_ip), _port);
-	socket_ = new asio::ip::tcp::socket(*io_service_);
+	magnetic_valve_socket_.reset(new asio::ip::tcp::socket(m_io_magnetic));
 	asio::error_code ec;
-	
-	socket_->connect(*ep_, ec);
+
+	magnetic_valve_socket_->connect(*ep_, ec);
 	if (ec)
 	{
+		magnetic_valve_socket_->close();
 		_error_str = "The connection could have timed out.";
 		return false;
 	}
@@ -932,7 +932,7 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 				while (1)
 				{
 					auto buf = asio::buffer(&msg, sizeof(msg));
-					socket_->write_some(buf);
+					magnetic_valve_socket_->write_some(buf);
 					std::string s;
 					if (!receive_img(s))
 					{
@@ -1043,7 +1043,7 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 						::PostMessage(m_hMainWnd, ID_SHOWCTRLMESSAGE, 10, (LPARAM)MsgPost);
 					//data_buffer_.clear();
 					//std::int64_t size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), 8));
-					size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), sizeof(VCameraMessageTrans)));
+					size = asio::read(*magnetic_valve_socket_, asio::buffer((char*)data_buffer_.data(), sizeof(VCameraMessageTrans)));
 					VCameraMessageTrans* msg2 = (VCameraMessageTrans*)data_buffer_.data();
 					nWidth = msg2->width;
 					nHeight = msg2->height;
@@ -1051,19 +1051,19 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 
 					if (nSignalling == 20)
 					{
-						auto& io = socket_->get_io_service();
-						if (!socket_->is_open())
+						auto& io = magnetic_valve_socket_->get_io_service();
+						if (!magnetic_valve_socket_->is_open())
 							return false;
 						asio::error_code er;
 						auto buf = asio::buffer(&msg, sizeof(msg));
 						int nLenght = msg.byteSize();
-						socket_->write_some(buf);
+						magnetic_valve_socket_->write_some(buf);
 
 						//auto buf = asio::buffer(msg.bytes(), msg.byteSize());
 						buf = asio::buffer(image.data, length);
 
-						socket_->write_some(buf);
-						std::cout << "client:ip:" << socket_->remote_endpoint().address() << "   port:" << socket_->remote_endpoint().port() << std::endl;
+						magnetic_valve_socket_->write_some(buf);
+						std::cout << "client:ip:" << magnetic_valve_socket_->remote_endpoint().address() << "   port:" << magnetic_valve_socket_->remote_endpoint().port() << std::endl;
 					}
 					else
 					{
@@ -1103,7 +1103,7 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 						::PostMessage(m_hMainWnd, ID_STOPSEND, file_countr, 0);
 					//data_buffer_.clear();
 					//std::int64_t size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), 8));
-					size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), sizeof(VCameraMessageTrans)));
+						size = asio::read(*magnetic_valve_socket_, asio::buffer((char*)data_buffer_.data(), sizeof(VCameraMessageTrans)));
 					VCameraMessageTrans* msg2 = (VCameraMessageTrans*)data_buffer_.data();
 					nWidth = msg2->width;
 					nHeight = msg2->height;
@@ -1113,22 +1113,22 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 					{
 						//sessions[0]->sendMessage(msg);
 						{
-							auto& io = socket_->get_io_service();
-							if (!socket_->is_open())
+							auto& io = magnetic_valve_socket_->get_io_service();
+							if (!magnetic_valve_socket_->is_open())
 								return false;
 							asio::error_code er;
 							auto buf = asio::buffer(&msg, sizeof(msg));
 							int nLenght = msg.byteSize();
-							socket_->write_some(buf);
+							magnetic_valve_socket_->write_some(buf);
 
 							//auto buf = asio::buffer(msg.bytes(), msg.byteSize());
 							buf = asio::buffer(image.data, length);
 
 							//asio::async_write(_socket, buf, [keep = std::move(msg)](asio::error_code, std::size_t){});
 							//asio::write(*_socket, buf, NULL, &er);
-							socket_->write_some(buf);
+							magnetic_valve_socket_->write_some(buf);
 						}
-						std::cout << "client:ip:" << socket_->remote_endpoint().address() << "   port:" << socket_->remote_endpoint().port() << std::endl;
+						std::cout << "client:ip:" << magnetic_valve_socket_->remote_endpoint().address() << "   port:" << magnetic_valve_socket_->remote_endpoint().port() << std::endl;
 					}
 					else
 					{
@@ -1171,7 +1171,7 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 						::PostMessage(m_hMainWnd, ID_STOPSEND, file_countr, 0);
 					//data_buffer_.clear();
 					//std::int64_t size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), 8));
-					size = asio::read(*socket_, asio::buffer((char*)data_buffer_.data(), sizeof(VCameraMessageTrans)));
+						size = asio::read(*magnetic_valve_socket_, asio::buffer((char*)data_buffer_.data(), sizeof(VCameraMessageTrans)));
 					VCameraMessageTrans* msg2 = (VCameraMessageTrans*)data_buffer_.data();
 					nWidth = msg2->width;
 					nHeight = msg2->height;
@@ -1181,22 +1181,22 @@ bool aq::Communicator::tcp_connect_thread2(std::string _ip, int _port, int camer
 					{
 						//sessions[0]->sendMessage(msg);
 						{
-							auto& io = socket_->get_io_service();
-							if (!socket_->is_open())
+							auto& io = magnetic_valve_socket_->get_io_service();
+							if (!magnetic_valve_socket_->is_open())
 								return false;
 							asio::error_code er;
 							auto buf = asio::buffer(&msg, sizeof(msg));
 							int nLenght = msg.byteSize();
-							socket_->write_some(buf);
+							magnetic_valve_socket_->write_some(buf);
 
 							//auto buf = asio::buffer(msg.bytes(), msg.byteSize());
 							buf = asio::buffer(image.data, length);
 
 							//asio::async_write(_socket, buf, [keep = std::move(msg)](asio::error_code, std::size_t){});
 							//asio::write(*_socket, buf, NULL, &er);
-							socket_->write_some(buf);
+							magnetic_valve_socket_->write_some(buf);
 						}
-						std::cout << "client:ip:" << socket_->remote_endpoint().address() << "   port:" << socket_->remote_endpoint().port() << std::endl;
+						std::cout << "client:ip:" << magnetic_valve_socket_->remote_endpoint().address() << "   port:" << magnetic_valve_socket_->remote_endpoint().port() << std::endl;
 					}
 					else
 					{

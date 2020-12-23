@@ -5,6 +5,17 @@
 #include <mutex>
 #include "VTx2Session.h"
 #include "VCameraMessageTrans.h"
+#include <string>
+#include <iostream>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
+#include <iostream>
+#include <boost/smart_ptr/scoped_ptr.hpp>
+#include <boost/smart_ptr/make_shared_object.hpp>
+#include <boost/smart_ptr/enable_shared_from_this.hpp>
+//#include <asio\ip\address_v4.hpp>
+
 #define  DATA_BUFFER_LENGTH 5000000
 using namespace asio::ip;
 
@@ -134,8 +145,9 @@ public:
 	asio::basic_stream_socket<asio::ip::tcp>* socket_;
 	std::string data_buffer_;
 	asio::ip::tcp::socket* _socket;
-
+	boost::scoped_ptr<asio::ip::tcp::socket> magnetic_valve_socket_;
 	//asio::tcp::acceptor acceptor_;
+	asio::io_service m_io_magnetic;
 
 	Vsee::VTx2Session* sessions[8];
 	tcp::socket* sockets[8];
