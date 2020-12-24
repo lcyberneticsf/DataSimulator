@@ -27,11 +27,14 @@ CCameraSetting::~CCameraSetting()
 void CCameraSetting::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EDIT_SCAN_SPEED, m_ChoosSspeed);
 }
 
 
 BEGIN_MESSAGE_MAP(CCameraSetting, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CCameraSetting::OnBnClickedOk)
+	ON_EN_CHANGE(IDC_EDIT_SCAN_SPEED, &CCameraSetting::OnEnChangeEditScanSpeed)
+	ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -41,7 +44,8 @@ BOOL CCameraSetting::OnInitDialog()
 {
 
 	CDialogEx::OnInitDialog();
-
+	font1.CreatePointFont(140, "楷体");
+	font2.CreatePointFont(120, "黑体");
 	char IniRead[255];
 	memset(IniRead, 0, 255);
 	char IniPath[255];
@@ -58,7 +62,7 @@ BOOL CCameraSetting::OnInitDialog()
 
 	//GetDlgItem(IDC_EDIT_SCAN_SPEED)->SetWindowTextA(std::to_string(m_fScanSpeed).c_str());
 	GetDlgItem(IDC_EDIT_SCAN_SPEED)->SetWindowTextA(str);
-
+	GetDlgItem(IDC_STATICMessage)->SetWindowText("数值范围为1.00~10.00");
 	return true;
 }
 
@@ -99,4 +103,36 @@ CString CCameraSetting::GetModulePath(void)
 	nPos = sPath.ReverseFind('\\');
 	sPath = sPath.Left(nPos);
 	return   sPath;
+}
+
+
+void CCameraSetting::OnEnChangeEditScanSpeed()
+{
+	// TODO:  如果该控件是 RICHEDIT 控件，它将不
+	// 发送此通知，除非重写 CDialogEx::OnInitDialog()
+	// 函数并调用 CRichEditCtrl().SetEventMask()，
+	// 同时将 ENM_CHANGE 标志“或”运算到掩码中。
+
+	// TODO:  在此添加控件通知处理程序代码
+	CString str;
+	m_ChoosSspeed.GetWindowTextA(str);
+	if (atof(str) > 10.00)
+		m_ChoosSspeed.SetWindowTextA("10.00");
+	else if (atof(str) <1.00)
+		m_ChoosSspeed.SetWindowTextA("1.00");
+}
+
+
+HBRUSH CCameraSetting::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	// TODO:  在此更改 DC 的任何特性
+	if (pWnd->GetDlgCtrlID() == IDC_STATICMessage)
+	{
+		pDC->SetTextColor(RGB(255, 0, 0));
+		pDC->SelectObject(&font2);//文字为22号字体，华文行楷
+	}
+	// TODO:  如果默认的不是所需画笔，则返回另一个画笔
+	return hbr;
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "afxwin.h"
 
 
 // CCameraSetting ¶Ô»°¿ò
@@ -24,4 +25,9 @@ public:
 	CString		GetModulePath(void);
 	int camera_scan_speed;
 	float m_fScanSpeed;
+	afx_msg void OnEnChangeEditScanSpeed();
+	CEdit m_ChoosSspeed;
+	CFont font1;
+	CFont font2;
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };
